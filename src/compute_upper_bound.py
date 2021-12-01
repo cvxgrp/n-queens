@@ -23,7 +23,6 @@ if __name__ == '__main__':
     initial_time = time.monotonic()
     x, v, norm_r, approx_iters = SeparableAffineCvxProblem(A, b, f, df, d2f, 0).solve()
     final_time = time.monotonic()
-    approx_obj = f(x)
     approx_dur = final_time - initial_time
 
     # Exact form solver
@@ -32,6 +31,7 @@ if __name__ == '__main__':
 
     N, E, S, W, _, _ = approximate_xqueenons.vec_to_matrices(x, n)
     x_init_sans_slack = np.hstack([N.reshape(-1), E.reshape(-1), S.reshape(-1), W.reshape(-1)])
+    np.random.seed(1)
     x_init_random = np.hstack([x_init_sans_slack, np.random.rand(A.shape[1] - x_init_sans_slack.shape[0])])
     x_init_deterministic = xqueenons.construct_slack_augemented_vector_from_grid(N, E, S, W, A, b)
     rand_p = .000001
@@ -48,6 +48,6 @@ if __name__ == '__main__':
     if write_sol:
         np.savez(f"{n}-XQueenons-solution", x=x, v=v)
 
-    print(f"Solved the approximate upper problem in {approx_dur} seconds and {approx_iters} iterations")
-    print(f"Solved the upper problem in {dur} seconds and {iters} iterations with a residual norm of {norm_r}")
-    print(f"U_{n} = {f(x)}")
+    print(f"Solved the approximate upper bound problem in {approx_dur} seconds and {approx_iters} iterations")
+    print(f"Solved the upper bound problem in {dur} seconds and {iters} iterations with a residual norm of {norm_r}")
+    print(f"U_{n} = {obj}")

@@ -86,7 +86,7 @@ def _newton_step(max_iters, tolerance, problem):
             assert x_is_valid(x), "PrimalDualPair is illegaly constructed." \
                 " This is a bug in the solver, not in your code."
             self.r_pri = A @ x - b
-            self.r_dual = (grad_f := nabla_f(x)) + (ATv := A.T @ v)
+            self.r_dual = nabla_f(x) + A.T @ v
 
             self.norm_r_pri = np.linalg.norm(self.r_pri)
             self.norm_r_dual = np.linalg.norm(self.r_dual)
@@ -227,7 +227,7 @@ def _newton_step(max_iters, tolerance, problem):
 
     while np.abs(pd_pair.norm_r) > tolerance and iters < max_iters:
         dx, dv = compute_update_direction(pd_pair)
-        pd_pair, t = infeasible_Newton_step(pd_pair, dx, dv)
+        pd_pair, _ = infeasible_Newton_step(pd_pair, dx, dv)
         iters += 1
 
     return pd_pair.x, pd_pair.v, pd_pair.norm_r, iters
