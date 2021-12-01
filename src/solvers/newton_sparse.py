@@ -41,7 +41,7 @@ class SparseHessianAffineCvxProblem:
     initial_point: Optional[np.ndarray] = field(default=None)
     initial_duals: Optional[np.ndarray] = field(default=None)
 
-    def solve(self, tolerance=1e-10, max_iters=50):
+    def solve(self, tolerance=1e-9, max_iters=50):
         """
             Returns:
                 x: The optimal x, a shape (n,) np.ndarray.

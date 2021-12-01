@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     N, E, S, W, _, _ = approximate_xqueenons.vec_to_matrices(x, n)
     x_init_sans_slack = np.hstack([N.reshape(-1), E.reshape(-1), S.reshape(-1), W.reshape(-1)])
-    np.random.seed(1)
+    np.random.seed(100)
     x_init_random = np.hstack([x_init_sans_slack, np.random.rand(A.shape[1] - x_init_sans_slack.shape[0])])
     x_init_deterministic = xqueenons.construct_slack_augemented_vector_from_grid(N, E, S, W, A, b)
     rand_p = .000001
