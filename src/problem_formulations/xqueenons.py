@@ -99,32 +99,6 @@ def construct_A(n):
 
     return A.tocsr(), np.array(b)
 
-def visualize_As_rows(A, n, skip_first=0):
-    import matplotlib.pyplot as plt
-    A = A[skip_first:].toarray()
-    for i in range(A.shape[0]):
-        a_i = A[i]
-        N, E, S, W, NW, SE, NE, SW = vec_to_matrices(a_i, n)
-        fig, axs = plt.subplots(4, 2)
-        fig.suptitle(f'a_i = {i+skip_first}')
-        axs[0, 0].imshow(N)
-        axs[0, 0].set_title("North")
-        axs[1, 0].imshow(E)
-        axs[1, 0].set_title("East")
-        axs[2, 0].imshow(S)
-        axs[2, 0].set_title("South")
-        axs[3, 0].imshow(W)
-        axs[3, 0].set_title("West")
-        axs[0, 1].imshow(NW.reshape(-1, 1))
-        axs[0, 1].set_title("2n - \\Sigma NW")
-        axs[1, 1].imshow(SE.reshape(-1, 1))
-        axs[1, 1].set_title("2n - \\Sigma SE")
-        axs[2, 1].imshow(NE.reshape(-1, 1))
-        axs[2, 1].set_title("2n - \\Sigma NE")
-        axs[3, 1].imshow(SW.reshape(-1, 1))
-        axs[3, 1].set_title("2n - \\Sigma SW")
-        plt.show()
-
 def construct_objective_fxn_derivs(n):
     four_n_squared = 4 * n**2
     single_entry_one_vec = np.array([1.])
@@ -136,7 +110,7 @@ def construct_objective_fxn_derivs(n):
         return 1 / x
     log = np.log
 
-    # Generated functions:
+    # Generatea functions (See generate_closed_form_xqueenon_integral.sage):
     def h(Sv, Nv):
         return 1/4*(2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)
 
