@@ -46,7 +46,7 @@ if __name__ == '__main__':
     dur = final_time - initial_time
 
     if write_sol:
-        np.savez(f"{n}-XQueenons-solution", x=x, v=v)
+        np.savez(f"{n}-upper-bound-witness", x=x)
 
     print(f"Solved the approximate upper bound problem in {approx_dur} seconds and {approx_iters} iterations")
     print(f"Solved the upper bound problem in {dur} seconds and {iters} iterations with a residual norm of {norm_r}")

@@ -9,3 +9,11 @@ requires that `scipy` and `numpy` are installed.
 To verify the closed-form expressions used for the integrals, see
 `src/problem_formulations/generate_closed_form_xqueenon_integral.sage`.
 You will need [Sage Math](https://www.sagemath.org/) to generate the expressions.
+
+
+We also provide witnesses for the bounds given in the paper, at `src/witnesses`.
+For the upper bound problem, we provide the `x` for which `f(x) = U_1024`.
+For the lower bound problem, we provide the `v` for which `L(v) = L_2048`.
+To generate bounds from the witnesses run `src/upper_bound_from_witness.py` and
+`src/lower_bound_from_witness.py`.
+

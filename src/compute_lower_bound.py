@@ -22,6 +22,6 @@ if __name__ == '__main__':
 
     assert (x > 0).all() and (x < 1 / n).all()
     if write_sol:
-        np.savez(f"{n}-lower-bound-solution", x=x, v=v)
+        np.savez(f"{n}-lower-bound-witness", v=v)
     print(f"Reached a residual norm of {norm_r} in {iters} iterations in {final_time - initial_time} seconds")
     print(f"L_{n} = {lower_bound.calculate_lagrangian(A, b, n, v)}")
