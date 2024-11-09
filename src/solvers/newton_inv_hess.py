@@ -9,54 +9,35 @@ import numpy as np
 dtype = np.longdouble
 
 @dataclass
-class SeparableAffineCvxProblem:
+class InvHessianAffineCvxProblem:
     __doc__ = """
-        A class to describe a program of the form:
-            min sum_i f_i(x_i)
-                s.t.
-                A x = b
-                x = (x_1, x_2, ..., x_n)
-            with f_i: R -> R strictly convex.
-        OR
-        problems of the form:
-            max sum_i f_i(x_i)
-                s.t.
-                A x = b
-                x = (x_1, x_2, ..., x_n)
-            with f_i: R -> R strictly concave.
-
-        To initialize this class provide the following:
+        A class to implement Newton-Raphson iteration on Knuth's Queenon problem. 
 
         A: a scipy.sparse.csr_matrix of shape (k, n). A may have any rank.
         b: a np.ndarray of shape (k,)
         f: This argument is ignored. It is not used by the algorithm.
         nabla_f: This function takes an input vector x and returns the gradient
             of f = sum_i f_i(x_i) wrt to x. It is R^n->R^n.
-        diag_of_nabla_squared_f: This function takes an input vector x and
-            returns the diagonal entries of the Hessian of f = sum_i f_i(x_i)
-            wrt to x. It is R^n->R^n.
         lower_bound_f: If this is a float, all vectors passed to nabla_f and
-            diag_of_nabla_squared_f will be greater than it. If it is a (n,)
-            vector, all vectors passed to nabla_f and diag_of_nabla_squared_f
+            nabla_squared_f will be greater than it. If it is a (n,)
+            vector, all vectors passed to nabla_f and nabla_squared_f
             will be elementwise greater than it. Defaults to -inf.
         upper_bound_f: If this is a float, all vectors passed to nabla_f and
-            diag_of_nabla_squared_f will be less than it. If it is a (n,)
-            vector, all vectors passed to nabla_f and diag_of_nabla_squared_f
+            nabla_squared_f will be less than it. If it is a (n,)
+            vector, all vectors passed to nabla_f and nabla_squared_f
             will be elementwise less than it. Defaults to +inf.
         initial_point: This is the initial point to start Newton iteration.
             It must be of shape (n,). This argument is optional.
         initial_duals: This is the initial value for the dual variables when
             we start Newton iteration. It must be of shape (k,). This argument
             is optional.
-
-    Initial author: Parth Nobel, 2021-10-10
     """
 
     A: scipy.sparse.csr_matrix
     b: np.ndarray
     f: Optional[Callable[[np.ndarray], np.ndarray]]
     nabla_f: Callable[[np.ndarray], np.ndarray]
-    diag_of_nabla_squared_f: Callable[[np.ndarray], np.ndarray]
+    inv_nabla_squared_f: Callable[[np.ndarray], scipy.sparse.dia_matrix]
     lower_bound_f: Union[float, np.ndarray] = field(default=float('-inf'))
     upper_bound_f: Union[float, np.ndarray] = field(default=float('inf'))
     initial_point: Optional[np.ndarray] = field(default=None)
@@ -78,7 +59,7 @@ def _newton_step(max_iters, tolerance, problem):
     A = problem.A
     b = problem.b
     nabla_f = problem.nabla_f
-    diag_of_nabla_squared_f = problem.diag_of_nabla_squared_f
+    inv_nabla_squared_f = problem.inv_nabla_squared_f
     upper_bound_f = problem.upper_bound_f
     if np.asarray(upper_bound_f).shape == ():
         upper_bound_f = upper_bound_f * np.ones(dim_variables)
@@ -107,16 +88,16 @@ def _newton_step(max_iters, tolerance, problem):
             assert x_is_valid(x), "PrimalDualPair is illegaly constructed." \
                 " This is a bug in the solver, not in your code."
             self.r_pri = A @ x - b
-            self.ATv = A.T @ v
-            self.r_dual = nabla_f(x) - self.ATv
+            self.r_dual = nabla_f(x) + A.T @ v
+
             self.norm_r_pri = np.linalg.norm(self.r_pri)
             self.norm_r_dual = np.linalg.norm(self.r_dual)
             self.norm_r = np.sqrt(self.norm_r_pri**2 + self.norm_r_dual**2)
 
-    def build_minres_LHS(diag_inv_nabla_squared_f_x):
+    def build_minres_LHS(inv_nabla_squared_f_x):
         def matvec(v):
             z1 = A.T @ v
-            z2 = diag_inv_nabla_squared_f_x * z1
+            z2 = inv_nabla_squared_f_x @ z1
             z3 = A @ z2
             return z3
 
@@ -130,28 +111,28 @@ def _newton_step(max_iters, tolerance, problem):
             The algorithm was derived on a whiteboard in Packard 243.
 
             It comes from solving the optimality conditions:
-                nabla f(x) + nabla^2 f(x) dx - A^T (v + dv) = 0
+                nabla f(x) + nabla^2 f(x) dx + A^T (v + dv) = 0
                 A (x + dx) - b = 0
             The final solution is:
-                dv = -(A @ nabla^2f(x)^-1 @ A^T)^-1 @ (r_p - A @ nabla^2f(x)^-1 @ r_d)
-                dx = -nabla^2f(x)^-1 @ (r_d - A^T @ dv)
+                dv = -(A @ nabla^2f(x)^-1 @ A^T)^-1 @ (-r_p + A @ nabla^2f(x)^-1 @ r_d)
+                dx = -nabla^2f(x)^-1 @ (r_d + A^T @ dv)
 
             Note that we exploit the seperability of f here in how we invert
             nabla^2f(x).
         """
-        inv_diag_nabla_squared_f_x = 1 / diag_of_nabla_squared_f(pair.x)
+        inv_nabla_squared_f_x = inv_nabla_squared_f(pair.x).tocsc()
 
-        inv_nabla_squared_f_r_dual =  inv_diag_nabla_squared_f_x * pair.r_dual
+        inv_nabla_squared_f_r_dual = inv_nabla_squared_f_x @ pair.r_dual
         #LHS = A @ scipy.sparse.linalg.spsolve(nabla_squared_f_x, A.T)
-        LHS = build_minres_LHS(inv_diag_nabla_squared_f_x)
-        RHS = pair.r_pri - A @ inv_nabla_squared_f_r_dual
+        LHS = build_minres_LHS(inv_nabla_squared_f_x)
+        RHS = -pair.r_pri + A @ inv_nabla_squared_f_r_dual
         neg_dv, stop_reason = scipy.sparse.linalg.minres(
                 LHS, RHS
         )
 
         assert stop_reason == 0, "minres should conclude that it succeeded"
         dv = -neg_dv
-        dx = -inv_diag_nabla_squared_f_x * (pair.r_dual - A.T @ dv)
+        dx = -(inv_nabla_squared_f_x @ (pair.r_dual + A.T @ dv))
         return dx, dv
 
     def max_t_for_valid_step(x, dx):
@@ -190,6 +171,8 @@ def _newton_step(max_iters, tolerance, problem):
 
             We start with a t that ensures we're below (above) the lower (upper)
             bound.
+
+            Neither alpha nor beta have been carefully tuned.
         """
         max_t = max_t_for_valid_step(oldpt.x, dx)
         t = min(1, 0.95 * max_t)
@@ -237,21 +220,13 @@ def _newton_step(max_iters, tolerance, problem):
         initial_v, istop_reason = scipy.sparse.linalg.lsmr(
             A.T, -nabla_f(initial_x)
         )[:2]
-        assert istop_reason <= 2
+        assert istop_reason <= 2, "Honestly, not sure what's reasonable to expect here."
 
     pd_pair = PrimalDualPair(initial_x, initial_v)
 
     iters = 0
 
-    def converged(pd_pair, iters):
-        if pd_pair.norm_r < tolerance:
-            return True
-        elif iters >= max_iters:
-            return True
-
-        return False
-
-    while not converged(pd_pair, iters):
+    while np.abs(pd_pair.norm_r) > tolerance and iters < max_iters:
         dx, dv = compute_update_direction(pd_pair)
         pd_pair, _ = infeasible_Newton_step(pd_pair, dx, dv)
         iters += 1

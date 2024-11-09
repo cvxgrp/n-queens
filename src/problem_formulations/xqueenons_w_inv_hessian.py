@@ -121,13 +121,18 @@ def construct_objective_fxn_derivs(n):
         return Nv*log(Nv)/(Nv - Sv) - 1/4*(2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**2
 
     def d2h_dS2(Sv, Nv):
-        return -log(Sv)/(Nv - Sv) - 2*Sv*log(Sv)/(Nv - Sv)**2 - 1/(Nv - Sv) + 1/2*(2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3
+        return  -log(Sv)/(Nv - Sv) - 2*Sv*log(Sv)/(Nv - Sv)**2 - 1/(Nv - Sv) + 1/2*(2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3
 
     def d2h_dN2(Sv, Nv):
-        return log(Nv)/(Nv - Sv) - 2*Nv*log(Nv)/(Nv - Sv)**2 + 1/(Nv - Sv) + 1/2*(2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3
+        return  log(Nv)/(Nv - Sv) - 2*Nv*log(Nv)/(Nv - Sv)**2 + 1/(Nv - Sv) + 1/2*(2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3
 
-    def d2h_dNdS(Sv, Nv):
-        return Nv*log(Nv)/(Nv - Sv)**2 + Sv*log(Sv)/(Nv - Sv)**2 - 1/2*(2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3
+    def hessian_upper_diag(Sv, Nv):
+        return  2/(2*log(Nv)/(Nv - Sv) - 4*Nv*log(Nv)/(Nv - Sv)**2 + 2/(Nv - Sv) + (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3) - 2*(2*Nv*log(Nv)/(Nv - Sv)**2 + 2*Sv*log(Sv)/(Nv - Sv)**2 - (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3)**2/(((2*Nv*log(Nv)/(Nv - Sv)**2 + 2*Sv*log(Sv)/(Nv - Sv)**2 - (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3)**2/(2*log(Nv)/(Nv - Sv) - 4*Nv*log(Nv)/(Nv - Sv)**2 + 2/(Nv - Sv) + (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3) + 2*log(Sv)/(Nv - Sv) + 4*Sv*log(Sv)/(Nv - Sv)**2 + 2/(Nv - Sv) - (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3)*(2*log(Nv)/(Nv - Sv) - 4*Nv*log(Nv)/(Nv - Sv)**2 + 2/(Nv - Sv) + (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3)**2)
+    def hessian_lower_diag(Sv, Nv):
+        return  -2/((2*Nv*log(Nv)/(Nv - Sv)**2 + 2*Sv*log(Sv)/(Nv - Sv)**2 - (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3)**2/(2*log(Nv)/(Nv - Sv) - 4*Nv*log(Nv)/(Nv - Sv)**2 + 2/(Nv - Sv) + (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3) + 2*log(Sv)/(Nv - Sv) + 4*Sv*log(Sv)/(Nv - Sv)**2 + 2/(Nv - Sv) - (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3)
+    def hessian_off_diag(Sv, Nv):
+        return  2*(2*Nv*log(Nv)/(Nv - Sv)**2 + 2*Sv*log(Sv)/(Nv - Sv)**2 - (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3)/(((2*Nv*log(Nv)/(Nv - Sv)**2 + 2*Sv*log(Sv)/(Nv - Sv)**2 - (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3)**2/(2*log(Nv)/(Nv - Sv) - 4*Nv*log(Nv)/(Nv - Sv)**2 + 2/(Nv - Sv) + (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3) + 2*log(Sv)/(Nv - Sv) + 4*Sv*log(Sv)/(Nv - Sv)**2 + 2/(Nv - Sv) - (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3)*(2*log(Nv)/(Nv - Sv) - 4*Nv*log(Nv)/(Nv - Sv)**2 + 2/(Nv - Sv) + (2*Nv**2*log(Nv) - 2*Sv**2*log(Sv) - Nv**2 + Sv**2)/(Nv - Sv)**3))
+
 
     def f(x):
         retval = -g(x[:four_n_squared]).sum() / (four_n_squared)
@@ -163,9 +168,9 @@ def construct_objective_fxn_derivs(n):
         retval[four_n_squared + 4 * n - 2 + 1: four_n_squared + 8 * n:2] = -dh_dS(SW_ext, NE_ext)[1:] / n
         return -retval
 
-    def d2f(x):
+    def d2finv(x):
         diag = np.empty_like(x)
-        diag[:four_n_squared] = -d2g(x[:four_n_squared]) / four_n_squared
+        diag[:four_n_squared] = -four_n_squared / d2g(x[:four_n_squared])
 
         _, _, _, _, NW, SE, NE, SW = vec_to_matrices(x, n)
         NW_ext = np.hstack([NW, single_entry_one_vec])
@@ -173,24 +178,25 @@ def construct_objective_fxn_derivs(n):
 
         NE_ext = np.hstack([NE, single_entry_one_vec])
         SW_ext = np.hstack([single_entry_one_vec, SW])
- 
         # scaled_two_n_minus_SigNW = x[4 * n_squared: 4 * n_squared + 4 * n - 2:2]
-        diag[four_n_squared: four_n_squared + 4 * n - 2:2] = -d2h_dN2(SE_ext, NW_ext)[:-1] / n
+        diag[four_n_squared: four_n_squared + 4 * n - 2:2] = -hessian_upper_diag(SE_ext, NW_ext)[:-1] * n
         # scaled_two_n_minus_SigSE = x[4 * n_squared + 1: 4 * n_squared + 4 * n - 2:2]
-        diag[four_n_squared + 1: four_n_squared + 4 * n - 2:2] = -d2h_dS2(SE_ext, NW_ext)[1:] / n
+        diag[four_n_squared + 1: four_n_squared + 4 * n - 2:2] = -hessian_lower_diag(SE_ext, NW_ext)[1:] * n
         # scaled_two_n_minus_SigNE = x[4 * n_squared + 4 * n -2: 4 * n_squared + 8 * n:2]
-        diag[four_n_squared + 4 * n - 2: four_n_squared + 8 * n:2] = -d2h_dN2(SW_ext, NE_ext)[:-1] / n
+        diag[four_n_squared + 4 * n - 2: four_n_squared + 8 * n:2] = -hessian_upper_diag(SW_ext, NE_ext)[:-1] * n
         # scaled_two_n_minus_SigSW = x[4 * n_squared + 4 * n + 1 -2: 4 * n_squared + 8 * n:2]
-        diag[four_n_squared + 4 * n - 2 + 1: four_n_squared + 8 * n:2] = -d2h_dS2(SW_ext, NE_ext)[1:] / n
+        diag[four_n_squared + 4 * n - 2 + 1: four_n_squared + 8 * n:2] = -hessian_lower_diag(SW_ext, NE_ext)[1:] * n
+        diag[4 * n**2 + 4 * n -3] = -n / d2h_dS2(SE_ext[-1], NW_ext[-1])
+        diag[-1] = -n / d2h_dS2(SW_ext[-1], NE_ext[-1])
 
 
         offdiag = np.zeros(x.shape[0] - 1, dtype=x.dtype)
-        offdiag[-4 * n +4::2] = -d2h_dNdS(SW_ext, NE_ext)[1:-1] / n
-        offdiag[-8 * n +6:-4 * n+2:2] = -d2h_dNdS(SE_ext, NW_ext)[1:-1] / n
+        offdiag[-4 * n +4::2] = -hessian_off_diag(SW_ext, NE_ext)[1:-1] * n
+        offdiag[-8 * n +6:-4 * n+2:2] = -hessian_off_diag(SE_ext, NW_ext)[1:-1] * n
 
         return -sp.diags([offdiag, diag, offdiag], [-1, 0, 1])
 
-    return f, df, d2f
+    return f, df, d2finv
 
 def construct_slack_augemented_vector_from_grid(N, E, S, W, A, b):
     grid_vec = np.hstack([N.reshape((-1)), E.reshape((-1)), S.reshape((-1)), W.reshape((-1)),])
